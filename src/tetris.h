@@ -14,6 +14,12 @@ typedef struct {
 typedef struct {
 	int x,y;
 	int w,h;
+	/** @todo Need to make this member 
+		data[y][x] then we can delete
+		rows more easily. Should be an
+		array of pointers to rows. Then
+		we can move rows around very easily.
+	*/
 	char *data;
 } Board;
 

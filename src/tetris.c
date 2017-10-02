@@ -150,10 +150,13 @@ void check_collision(Board *b, Shape *s)
 				break;
 			}
 			if (b->data[x+s->vel_x + (y+s->vel_y)*b->w]) {
+				s->rotation = old_rotation;
+				get_block_from_shape(s, i, &x, &y);
 				hit = 1;
 				if (b->data[x + (y+1)*b->w]) {
 					set_shape(s, b);
 					init_shape(s, 4, -4);
+					return ; /* Nothing else needed */
 				}	
 				break; 
 			}
@@ -162,10 +165,12 @@ void check_collision(Board *b, Shape *s)
 
 	if (!hit) {
 		s->x += s->vel_x;
-		s->y += s->vel_y;
 	} else {
-		s->rotation = s->new_rotation = old_rotation;
+		s->rotation = old_rotation;
+		s->new_rotation = old_rotation;
 	}
+	/* y whatever, if not set */
+	s->y += s->vel_y;
 	s->vel_x = 0;
 	s->vel_y = 0;
 }
