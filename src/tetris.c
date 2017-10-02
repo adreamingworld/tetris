@@ -1,3 +1,10 @@
+/**
+	@todo 	Make a drop function. Make a ghost shape that shows where
+			the shape will land.
+	@todo	Midi music. Tempo speeds up with the game.
+	@todo	Lines explode.
+*/
+
 #include <time.h>
 
 #include "tetris.h"
@@ -35,11 +42,15 @@ void init_board(Board *board, int x, int y, int w, int h)
 	board->y = y;
 	board->w = w;
 	board->h = h+1;
-	board->data = malloc(w*(h+1));
+	board->data = malloc((h+1) * sizeof(char *));
+
+	for (i = 0; i < h+1; i++) {
+		board->data[i] = malloc(sizeof(char) * w);
+	}
 
 	/* Fill bottom with blocks to help collision */
 	for (i=0; i<w; i++)
-		board->data[i + h*w] = 1;
+		board->data[h][i] = 1;
 }
 
 void init_shape(Shape *shape, int x, int y)
@@ -82,7 +93,7 @@ void draw_shape(Gfx *gfx, Shape *s, Board *b)
 		int x ;
 		int y ;
 		if (get_block_from_shape(s, i, &x, &y)) {
-			draw_block(gfx, 1, x*32,y*32);
+			draw_block(gfx, s->type, x*32,y*32);
 		}
 	}
 }
@@ -100,7 +111,7 @@ void process_input(Game *game, unsigned short keys[])
 	if (keys[KEY_DOWN]) {
 		if (keys[KEY_DOWN] & 0x80) {
 			keys[KEY_DOWN] &= 1;
-			game->shape.type = (game->shape.type+1)%7;
+			game->shape.new_rotation = (game->shape.new_rotation-1)%4;
 		}
 	}
 
@@ -120,14 +131,47 @@ void process_input(Game *game, unsigned short keys[])
 
 }
 
+int check_line(Board *b, int l)
+{
+	int i;
+	for (i=0; i<b->w; i++) {
+		if (b->data[l][i] == 0) return 0;
+	}
+	return 1;
+}
+
+void destroy_line(Board *b, int l)
+{
+	int i;
+	for (i = l; i > 1; i--) {
+		/* Swap this one with the one before */
+		memcpy(b->data[i], b->data[i-1], b->w);
+	}
+}
+
 void set_shape(Shape *s, Board *b)
 {
 	int i;
 	int x,y;
+	int lines_to_check[4]={0}; /* Can only be a maximum of 4 lines to check */
+	int line_count=0;
 
 	for (i=0; i<2*4; i++) {
 		if (get_block_from_shape(s, i, &x, &y) ) {
-			b->data[x + y*b->w] = 1;
+			if (y<0) continue;
+			b->data[y][x] = s->type+1;
+			int j=0;
+			for (j=0; j<line_count; j++) if (lines_to_check[j] == y+1) break;
+			if (j==line_count || line_count==0) lines_to_check[line_count++] = y+1; /* Add one because 0 means invalid */
+		}
+	}
+
+	/* check lines to see if full */
+	for (i=0; i<line_count; i++) {
+		if (lines_to_check[i]-1 > 1)
+		if (check_line(b, lines_to_check[i]-1)) {
+			int line = lines_to_check[i]-1;
+			destroy_line(b, line);
 		}
 	}
 }
@@ -149,11 +193,11 @@ void check_collision(Board *b, Shape *s)
 				hit = 1;
 				break;
 			}
-			if (b->data[x+s->vel_x + (y+s->vel_y)*b->w]) {
+			if (b->data[y+s->vel_y][x+s->vel_x]) {
 				s->rotation = old_rotation;
 				get_block_from_shape(s, i, &x, &y);
 				hit = 1;
-				if (b->data[x + (y+1)*b->w]) {
+				if (b->data[y+1][x]) {
 					set_shape(s, b);
 					init_shape(s, 4, -4);
 					return ; /* Nothing else needed */
@@ -177,12 +221,11 @@ void check_collision(Board *b, Shape *s)
 void draw_board(Gfx *gfx, Board *b) 
 {
 	int i;
-
 	for (i=0; i< b->w*b->h; i++) {
 		int x = i%b->w;
 		int y = i/b->w;
-
-		if (b->data[i]) draw_block(gfx, 1, x*32, y*32);
+		/* -1 becasue 0 means empty */
+		if (b->data[y][x]) draw_block(gfx, b->data[y][x]-1, x*32, y*32);
 	}
 }
 
@@ -213,7 +256,7 @@ int main()
 		gfx_flip(&game.gfx);
 		gfx_clear(&game.gfx);
 
-		if (i%20 == 0) game.shape.vel_y = 1;
+		if (i%40 == 0) game.shape.vel_y = 1;
 		i++;
 	}
 }

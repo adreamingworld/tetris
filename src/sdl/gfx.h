@@ -7,7 +7,7 @@
 typedef struct {
 	int w,h;
 	SDL_Surface *screen;
-	SDL_Surface *block;
+	SDL_Surface *block[7];
 } Gfx;
 
 int init_gfx(Gfx *gfx, const char *title, int w, int h);
