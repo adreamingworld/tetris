@@ -1,4 +1,4 @@
-#include <input.h>
+#include "input.h"
 
 int get_input(unsigned short keys[])
 {

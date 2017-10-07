@@ -16,7 +16,6 @@ void colorize(SDL_Surface *s, float r, float g, float b)
 	char *ptr = s->pixels;
 	int pitch = s->w;
 	int h = s->h;
-	printf("%i p %i h %i\n", s->format->BitsPerPixel, pitch, h);
 
 	for (i=0; i<pitch*h; i++) {
 		ptr[i*3+0] *= b;
@@ -28,7 +27,9 @@ void colorize(SDL_Surface *s, float r, float g, float b)
 int init_gfx(Gfx *gfx, const char *title, int w, int h)
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	
+
+	gfx->w = w;
+	gfx->h = h;
 	gfx->screen = SDL_SetVideoMode(w, h, 24, 0);
 	SDL_WM_SetCaption(title, NULL);
 
