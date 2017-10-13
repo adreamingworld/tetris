@@ -8,6 +8,8 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_AUX_DIR([build-aux]) 
 
+#need this to get $host_os
+AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.
@@ -25,3 +27,7 @@ AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+AC_MSG_NOTICE([This message will show ])
+AC_MSG_NOTICE([${host_os}])
+AC_MSG_NOTICE([${prefix}])
+

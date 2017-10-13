@@ -2,6 +2,9 @@
 	@file tetris.c
 	@todo 	Make a drop function. Make a ghost shape that shows where
 			the shape will land.
+	@todo	make it so the shape is drawn with the board
+			this way we can align it with it. We can draw a portion
+			of the board, and the shape where it should be in the board.
 	@todo	Midi music. Tempo speeds up with the game.
 	@todo	We need to check if lines are full in the right order.
 */
@@ -11,6 +14,7 @@
 #include "tetris.h"
 #include "sdl/gfx.h"
 #include "sdl/input.h"
+#include "sdl/sys.h"
 
 char shapes[] =  {
 				0b00001111, /* I */
@@ -56,20 +60,19 @@ void init_board(Board *board, int x, int y, int w, int h)
 	board->data = calloc((h+1) * sizeof(char *), 1);
 
 	board->particles = calloc( sizeof(Particle)* w*(h+1), 1);
-	Particle *p = &board->particles[2];
 	
-	for (i=0; i<(h+1)*w; i++) {
+	for (i=0; i<(h)*w; i++) {
 		int x = i%w;
 		int y = i/w;
 		init_particle(&board->particles[i], x, y, rand()%7);
 	}
 
 	for (i = 0; i < h+1; i++) {
-		board->data[i] = malloc(sizeof(char) * w);
+		board->data[i] = calloc(sizeof(char) * (w), 1);
 	}
 
 	/* Fill bottom with blocks to help collision */
-	for (i=0; i<w*(h+1); i++) {
+	for (i=0; i<(w)*(h+1); i++) {
 		int x = i%w;
 		int y = i/w;
 		if (y==h || x==0 || x==w-1)
@@ -117,7 +120,8 @@ void draw_shape(Gfx *gfx, Shape *s, Board *b)
 		int x ;
 		int y ;
 		if (get_block_from_shape(s, i, &x, &y)) {
-			draw_block(gfx, s->type, x*32,y*32);
+			if (y < 0) continue; //printf("DANGER\n");
+			draw_block(gfx, s->type, (x)*32,y*32);
 		}
 	}
 }
@@ -240,11 +244,11 @@ void set_shape(Shape *s, Board *b)
 void draw_board(Gfx *gfx, Board *b) 
 {
 	int i;
-	for (i=0; i< b->w*b->h; i++) {
-		int x = i%b->w;
-		int y = i/b->w;
+	for (i=0; i< (b->w)*b->h; i++) {
+		int x = i%(b->w);
+		int y = i/(b->w);
 		/* -1 becasue 0 means empty */
-		if (b->data[y][x]) draw_block(gfx, b->data[y][x]-1, x*32, y*32);
+		if (b->data[y][x]) draw_block(gfx, b->data[y][x]-1, (x)*32, y*32);
 	}
 }
 void draw_particle(Gfx *gfx, Game *game, Particle *p) {
@@ -261,18 +265,18 @@ void draw_particle(Gfx *gfx, Game *game, Particle *p) {
 		) p->active = 0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	int i=0;
 	Game game = {0};
 
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 
 	init_shape(&game.shape, 4,0);
 	init_board(&game.board, 0,0, 12, 22);
 	init_gfx(&game.gfx, "Tetris", game.board.w*32, game.board.h*32);
 	game.w = game.gfx.w;
 	game.h = game.gfx.h;
+	unsigned int start = sys_get_ticks();
 
 	while (!game.quit) {
 		get_input(game.keys);
@@ -287,7 +291,7 @@ int main()
 
 		/* Draw Particles */
 		int j;
-		for (j=0; j< game.board.w * game.board.h-1; j++) {
+		for (j=0; j< game.board.w * game.board.h;j++) {
 			if (game.board.particles[j].active)
 				draw_particle(&game.gfx, &game, &game.board.particles[j]);
 		}
@@ -296,7 +300,9 @@ int main()
 		gfx_flip(&game.gfx);
 		gfx_clear(&game.gfx);
 
-		if (i%40 == 0) {
+		unsigned int current_time = sys_get_ticks();
+		if (current_time > start + 300) {
+			start = sys_get_ticks();
 			if (check_collision(&game.board, game.shape.type, game.shape.rotation, game.shape.x, game.shape.y+1) ) {
 				game.shape.y += 1;
 			} else {
@@ -305,6 +311,5 @@ int main()
 				init_shape(&game.shape, 4,0);
 			}
 		}
-		i++;
 	}
 }
