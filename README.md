@@ -2,7 +2,7 @@
 
 My attempt at making tetris in C.
 
-##Building
+## Building
 ```
 autoreconf -vi && ./configure
 make
