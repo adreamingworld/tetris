@@ -10,7 +10,7 @@ make
 
 To install and uninstall
 ```
-make install
-make uninstall
+# make install
+# make uninstall
 ```
 
