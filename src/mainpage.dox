@@ -1,4 +1,11 @@
 /**
+	@page notes Notes
 	@mainpage
 	@ref todo
+
+	@ref notes
+
+	@page notes
+	Top row should be kept clear?? See destroy_line()
+
 */

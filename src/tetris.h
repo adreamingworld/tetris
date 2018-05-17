@@ -22,6 +22,7 @@ typedef struct {
 	int x,y;
 	int w,h;
 	char **data;
+	char *line_status;
 	Particle *particles;
 } Board;
 

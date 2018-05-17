@@ -59,6 +59,8 @@ void init_board(Board *board, int x, int y, int w, int h)
 	board->h = h;
 	board->data = calloc((h+1) * sizeof(char *), 1);
 
+	board->line_status = calloc(1, h);
+
 	board->particles = calloc( sizeof(Particle)* w*(h+1), 1);
 	
 	for (i=0; i<(h)*w; i++) {
@@ -200,14 +202,23 @@ int check_line(Board *b, int l)
 	return 1;
 }
 
+/** 
+	@brief
+	Destroys row of blocks when filled.
+ */
 void destroy_line(Board *b, int l)
 {
 	int i;
+	/*Unmark for death, so this line can be reused */
+	b->line_status[l] = 0;
 	for (i=0; i<b->w; i++) {
 			Particle *p = &b->particles[i+l*b->w];
 		init_particle(p, i, l, b->data[l][i] - 1);
 	}
 
+	/** 	 
+		So the top row should always be kept clear? Otherwise we would copy blocks onto the lower ones.
+	*/
 	for (i = l; i > 1; i--) {
 		/* Swap this one with the one before */
 		memcpy(b->data[i], b->data[i-1], b->w);
@@ -236,7 +247,16 @@ void set_shape(Shape *s, Board *b)
 		if (lines_to_check[i]-1 > 1)
 		if (check_line(b, lines_to_check[i]-1)) {
 			int line = lines_to_check[i]-1;
-			destroy_line(b, line);
+			//destroy_line(b, line);
+			/* Mark for death */
+			b->line_status[line] = 1;
+		}
+	}
+
+	for (i=0; i<b->h; i++) {
+		/* If marked for death */
+		if (b->line_status[i]) {
+			destroy_line(b, i);
 		}
 	}
 }
