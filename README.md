@@ -4,7 +4,7 @@ My attempt at making tetris in C.
 
 ## Building
 ```
-autoreconf -vi && ./configure
+autoreconf -i && ./configure
 make
 ```
 
