@@ -51,40 +51,40 @@ void init_particle(Particle *p, int x, int y, char type)
 	p->active = 1;
 	p->type = type;
 	p->x = x*32;
-	p->y = y*32;
+	p->y = y*32; 
 	p->vy = -(1.0 + (float)(rand()%20) / 10.0);
 	p->vx = -1.0 + ((float)(rand()%20) / 10.0);
 }
 void init_board(Board *board, int x, int y, int w, int h)
 {
 	int i;
-
+	int extra_head_room = 4;
 	board->x = x;
 	board->y = y;
 	board->w = w;
 	board->h = h;
-	board->data = calloc((h+1) * sizeof(char *), 1);
+	board->data = calloc(1, (h+extra_head_room+1) * sizeof(char *));
 
-	board->line_status = calloc(1, h);
+	board->line_status = calloc(1, h+extra_head_room);
 
-	board->particles = calloc( sizeof(Particle)* w*(h+1), 1);
+	board->particles = calloc( sizeof(Particle)* w*(h+1+extra_head_room), 1);
 	
 	for (i=0; i<(h)*(w-2); i++) {
 		int x = 1+ i%(w-2);
 		int y = i/(w-2);
-		//init_particle(&board->particles[i], x, y, rand()%7);
+		//init_particle(&board->particles[i], x, y, 1 + rand()%6);
 		init_particle(&board->particles[i], x, y, 2);
 	}
 
-	for (i = 0; i < h+1; i++) {
+	for (i = 0; i < h+1+extra_head_room; i++) {
 		board->data[i] = calloc(sizeof(char) * (w), 1);
 	}
 
 	/* Fill bottom with blocks to help collision */
-	for (i=0; i<(w)*(h+1); i++) {
+	for (i=0; i<(w)*(h+extra_head_room+1); i++) {
 		int x = i%w;
 		int y = i/w;
-		if (y==h || x==0 || x==w-1)
+		if (y==h+extra_head_room || x==0 || x==w-1)
 			board->data[y][x] = 1;
 	}
 }
@@ -93,7 +93,8 @@ void init_shape(Shape *shape, int x, int y)
 {
 	shape->x = x;
 	shape->y = y;
-	shape->type = 1 + rand()%6;
+	shape->type = rand()%7;
+	shape->colour = 1+shape->type;//rand()%6;
 	shape->new_rotation = rand()%4;
 }
 
@@ -130,7 +131,8 @@ void draw_shape(Gfx *gfx, Shape *s, Board *b)
 		int y ;
 		if (get_block_from_shape(s, i, &x, &y)) {
 			if (y < 0) continue; 
-			draw_block(gfx, s->type, (x)*32,y*32);
+			/* -4 because of head room*/
+			draw_block(gfx, s->colour, (x)*32,(y-4)*32);
 		}
 	}
 }
@@ -223,7 +225,7 @@ void destroy_line(Board *b, int l)
 	b->line_status[l] = 0;
 	for (i=0; i<b->w; i++) {
 			Particle *p = &b->particles[i+l*b->w];
-		init_particle(p, i, l, b->data[l][i] - 1);
+		init_particle(p, i, l-4, b->data[l][i] - 1);
 	}
 
 	/** 	 
@@ -245,7 +247,7 @@ void set_shape(Shape *s, Board *b)
 	for (i=0; i<2*4; i++) {
 		if (get_block_from_shape(s, i, &x, &y) ) {
 			if (y<0) continue;
-			b->data[y][x] = s->type+1;
+			b->data[y][x] = s->colour+1;
 			int j=0;
 			for (j=0; j<line_count; j++) if (lines_to_check[j] == y+1) break;
 			if (j==line_count || line_count==0) lines_to_check[line_count++] = y+1; /* Add one because 0 means invalid */
@@ -263,7 +265,7 @@ void set_shape(Shape *s, Board *b)
 		}
 	}
 
-	for (i=0; i<b->h; i++) {
+	for (i=0; i<b->h+4; i++) {
 		/* If marked for death */
 		if (b->line_status[i]) {
 			destroy_line(b, i);
@@ -274,11 +276,11 @@ void set_shape(Shape *s, Board *b)
 void draw_board(Gfx *gfx, Board *b) 
 {
 	int i;
-	for (i=0; i< (b->w)*b->h; i++) {
+	for (i=0; i< (b->w)*(b->h); i++) {
 		int x = i%(b->w);
-		int y = i/(b->w);
+		int y = (i/(b->w)); 
 		/* -1 becasue 0 means empty */
-		if (b->data[y][x]) draw_block(gfx, b->data[y][x]-1, (x)*32, y*32);
+		if (b->data[y+4][x]) draw_block(gfx, b->data[y+4][x]-1, (x)*32, y*32);
 	}
 }
 void draw_particle(Gfx *gfx, Game *game, Particle *p, int move) {
@@ -287,17 +289,17 @@ void draw_particle(Gfx *gfx, Game *game, Particle *p, int move) {
 	p->x += p->vx;
 	p->y += p->vy;
 	p->vy += 0.05;
-
 	if (
 		p->x > game->w ||
 		p->x < -32 ||
 		p->y < -32 ||
-		p->y > game->h
-		) p->active = 0;
+		p->y > (game->h+4)
+		) {
+			p->active = 0;
+		}
 }
 
 int play(Game *game) {
-
 	while (game->state == 1) {
 		get_input(game->keys);
 		process_input(game, game->keys); 
@@ -311,7 +313,7 @@ int play(Game *game) {
 
 		/* Draw Particles */
 		int j;
-		for (j=0; j< game->board.w * game->board.h;j++) {
+		for (j=0; j< game->board.w * (game->board.h+4);j++) {
 			if (game->board.particles[j].active)
 				draw_particle(&game->gfx, game, &game->board.particles[j], 1);
 		}
@@ -321,14 +323,14 @@ int play(Game *game) {
 		gfx_clear(&game->gfx);
 
 		unsigned int current_time = sys_get_ticks();
-		if (current_time > game->start_ticks + 1000) {
+		if (current_time > game->start_ticks + 500) {
 			game->start_ticks = sys_get_ticks();
 			if (check_collision(&game->board, game->shape.type, game->shape.rotation, game->shape.x, game->shape.y+1) ) {
 				game->shape.y += 1;
 			} else {
 				set_shape(&game->shape, &game->board);
 				/* New shape */
-				init_shape(&game->shape, 4,0);
+				init_shape(&game->shape, 4,3);
 			}
 		}
 	}

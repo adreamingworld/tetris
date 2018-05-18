@@ -8,7 +8,7 @@
 typedef struct {
 	int w,h;
 	SDL_Surface *screen;
-	SDL_Surface *block[7];
+	SDL_Surface *block[8];
 
 	SDL_Surface *menu_stuff;
 } Gfx;

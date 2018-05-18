@@ -3,6 +3,10 @@
 
 AC_PREREQ([2.69])
 AC_INIT([tetron], [0.0.1], [])
+
+# Put all m4 files in m4 directory
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_CONFIG_SRCDIR([src/tetron.c])
 AC_CONFIG_HEADERS([src/config.h])
 
@@ -29,7 +33,7 @@ AC_FUNC_MALLOC
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
-AC_MSG_NOTICE([This message will show ])
-AC_MSG_NOTICE([${host_os}])
-AC_MSG_NOTICE([${prefix}])
+#AC_MSG_NOTICE([This message will show ])
+#AC_MSG_NOTICE([${prefix}])
+AC_MSG_NOTICE([OS: ${host_os}])
 

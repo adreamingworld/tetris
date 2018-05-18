@@ -1,14 +1,15 @@
 #include "gfx.h"
-#define SCALE 4
+#define SCALE 3
 
-float colours[7][3] = {
-					{0.9, 0.1, 0.1},
-					{0.1, 0.9, 0.4},
-					{0.5, 0.4, 0.9},
-					{0.7, 0.9, 0.2},
-					{0.2, 0.8, 0.8},
-					{0.5, 0.4, 0.5},
-					{0.8, 0.8, 0.7}
+float colours[8][3] = {
+					{0.4, 0.4, 0.4},
+					{0.2, 1.0, 0.2},
+					{0.1, 0.1, 1.0}, /* blue */
+					{1.0, 1.0, 0.3},
+					{0.3, 1.0, 1.0},
+					{0.6, 0.0, 0.6},
+					{1.0, 0.6, 1.0},
+					{0.6, 0.3, 0.2} /* brown */
 					};
 
 void colorize(SDL_Surface *s, float r, float g, float b)
@@ -63,20 +64,25 @@ int init_gfx(Gfx *gfx, const char *title, int w, int h)
 	SDL_WM_SetCaption(title, NULL);
 
 	int i;
-	for (i=0; i<7; i++) {
+	for (i=0; i<8; i++) {
 		gfx->block[i] = 0;
-		gfx->block[i] = SDL_LoadBMP(DIR"block.bmp");
+		gfx->block[i] = SDL_LoadBMP(DATA_DIR"res/block.bmp");
 		if (gfx->block[i] == 0) {
-			gfx->block[i] = SDL_LoadBMP("block.bmp");
+			gfx->block[i] = SDL_LoadBMP("res/block.bmp");
+			if (gfx->block[i] == 0) {
+				printf("Failed to load res/block.bmp\n");
+				exit(-1);
+			}
 		}
 		colorize(gfx->block[i], colours[i][0], colours[i][1], colours[i][2]);
+		scale(&gfx->block[i], 2);
 	}
 
-	gfx->menu_stuff = SDL_LoadBMP(DIR"menu.bmp");
+	gfx->menu_stuff = SDL_LoadBMP(DATA_DIR"res/menu.bmp");
 	if (gfx->menu_stuff == 0) {
-		gfx->menu_stuff = SDL_LoadBMP("menu.bmp");
+		gfx->menu_stuff = SDL_LoadBMP("res/menu.bmp");
 		if (gfx->menu_stuff == 0) {
-			printf("Failed to load menu.bmp.\n");
+			printf("Failed to load res/menu.bmp.\n");
 			exit(-1);
 		}
 	}
@@ -101,7 +107,7 @@ void blit_part(SDL_Surface *surface, SDL_Surface *screen, int src[6])
 {
 	SDL_Rect srect, drect;
 	drect.x = src[0]*SCALE;
-	drect.y = src[1]*SCALE;
+	drect.y = src[1];
 
 	srect.x = src[2]*SCALE;
 	srect.y = src[3]*SCALE;
@@ -114,25 +120,26 @@ int draw_menu(Gfx *gfx, int selected, unsigned int time)
 {
 	int width = 16 + gfx->screen->w/SCALE;
 
-	int toffset[] = {12,16*5};
-	int sta_pos[] = {toffset[0]+16, 	toffset[1]+16*0, 	16,	16,	16*3, 	16};
-	int con_pos[] = {toffset[0]+16, 	toffset[1]+16*1, 	0,	16*3,	16*4, 	16};
-	int qui_pos[] = {toffset[0]+16, 	toffset[1]+16*2, 	16,	16*2,	16*3, 	16};
+	int toffset[] = {32,16*SCALE*5};
+	int sta_pos[] = {toffset[0]+16, 	toffset[1]+16*SCALE*0, 	16,	16,	16*3, 	16};
+	int con_pos[] = {toffset[0]+16, 	toffset[1]+16*SCALE*1, 	0,	16*3,	16*4, 	16};
+	int qui_pos[] = {toffset[0]+16, 	toffset[1]+16*SCALE*2, 	16,	16*2,	16*3, 	16};
 
-	int sel_pos[] = {-2 + toffset[0] + (sin(time/100.0f)*2), 	toffset[1]+16*selected, 	0,	0,	16, 	16};
+	int sel_pos[] = {12+ toffset[0] + (sin(time/100.0f)*2), 	toffset[1]+16*SCALE*selected, 	0,	0,	16, 	16};
 
-	int tee_pos[] = {-16 + (16*0 + (time/50))%width, 	16+(sin((time+(200*0))/250.0f) * 8), 	16,	0,	16, 	16};
-	int eee_pos[] = {-16 + (16*1 + (time/50))%width, 	16+(sin((time+(200*1))/250.0f) * 8), 	0,	16,	16, 	16};
-	int te2_pos[] = {-16 + (16*2 + (time/50))%width, 	16+(sin((time+(200*2))/250.0f) * 8), 	16,	0,	16, 	16};
-	int rrr_pos[] = {-16 + (16*3 + (time/50))%width, 	16+(sin((time+(200*3))/250.0f) * 8), 	0,	16*2,	16, 	16};
-	int ooo_pos[] = {-16 + (16*4 + (time/50))%width, 	16+(sin((time+(200*4))/250.0f) * 8), 	16*3,	0,	16, 	16};
-	int nnn_pos[] = {-16 + (16*5 + (time/50))%width, 	16+(sin((time+(200*5))/250.0f) * 8), 	16*2,	0,	16, 	16};
+	int tee_pos[] = {-16 + (16*0 + (time/23))%width, 	40+(sin((time+(200*0))/250.0f) * 16), 	16,	0,	16, 	16};
+	int eee_pos[] = {-16 + (16*1 + (time/23))%width, 	40+(sin((time+(200*1))/250.0f) * 16), 	0,	16,	16, 	16};
+	int te2_pos[] = {-16 + (16*2 + (time/23))%width, 	40+(sin((time+(200*2))/250.0f) * 16), 	16,	0,	16, 	16};
+	int rrr_pos[] = {-16 + (16*3 + (time/23))%width, 	40+(sin((time+(200*3))/250.0f) * 16), 	0,	16*2,	16, 	16};
+	int ooo_pos[] = {-16 + (16*4 + (time/23))%width, 	40+(sin((time+(200*4))/250.0f) * 16), 	16*3,	0,	16, 	16};
+	int nnn_pos[] = {-16 + (16*5 + (time/23))%width, 	40+(sin((time+(200*5))/250.0f) * 16), 	16*2,	0,	16, 	16};
 
-	int ba1_pos[] = {-16 + (16*6 + (time/50))%width, 	16+(sin((time+(200*6))/250.0f) * 8), 		0,	0,	16, 	16};
-	int ba2_pos[] = {-16 + (16*7 + (time/50))%width, 	16+(sin((time+(200*7))/250.0f) * 8), 		0,	0,	16, 	16};
-	int ba3_pos[] = {-16 + (16*8 + (time/50))%width, 	16+(sin((time+(200*8))/250.0f) * 8), 		0,	0,	16, 	16};
-	int ba4_pos[] = {-16 + (16*9 + (time/50))%width, 	16+(sin((time+(200*9))/250.0f) * 8), 		0,	0,	16, 	16};
-
+	SDL_Rect fillrect;
+	fillrect.x = 0;
+	fillrect.y = 32;
+	fillrect.w = gfx->w;
+	fillrect.h = 64;
+	SDL_FillRect(gfx->screen, &fillrect, 0x000033);
 
 	blit_part(gfx->menu_stuff, gfx->screen, sta_pos);
 	blit_part(gfx->menu_stuff, gfx->screen, qui_pos);
@@ -145,10 +152,6 @@ int draw_menu(Gfx *gfx, int selected, unsigned int time)
 	blit_part(gfx->menu_stuff, gfx->screen, rrr_pos);
 	blit_part(gfx->menu_stuff, gfx->screen, ooo_pos);
 	blit_part(gfx->menu_stuff, gfx->screen, nnn_pos);
-
-	blit_part(gfx->menu_stuff, gfx->screen, ba1_pos);
-	blit_part(gfx->menu_stuff, gfx->screen, ba2_pos);
-	blit_part(gfx->menu_stuff, gfx->screen, ba3_pos);
 }
 
 int draw_block(Gfx *gfx, char colour, int x, int y)

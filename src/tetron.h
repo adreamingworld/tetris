@@ -5,6 +5,7 @@
 
 typedef struct {
 	char type;
+	char colour;
 	char rotation;
 	char new_rotation;
 	int x,y;
