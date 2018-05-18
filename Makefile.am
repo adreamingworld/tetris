@@ -1,10 +1,10 @@
 #Go into sub directories
 AUTOMAKE_OPTIONS = subdir-objects
 
-bin_PROGRAMS = tetris
-tetris_SOURCES = \
-				src/tetris.c \
-				src/tetris.h \
+bin_PROGRAMS = tetron
+tetron_SOURCES = \
+				src/tetron.c \
+				src/tetron.h \
 				src/sdl/gfx.c \
 				src/sdl/gfx.h \
 				src/sdl/input.c \
@@ -12,18 +12,18 @@ tetris_SOURCES = \
 				src/sdl/sys.c \
 				src/sdl/sys.h
 
-tetris_CPPFLAGS = @SDL_CFLAGS@
+tetron_CPPFLAGS = @SDL_CFLAGS@
 #LDADD goes after the objects
 # windows compilation seems to require the libraries come after the objects
 #LDFLAGS goes at the beginning
-tetris_LDADD = @SDL_LIBS@
+tetron_LDADD = @SDL_LIBS@
 
 #docdir, 
-#pkgdatadir = /usr/local/share/tetris
-#pkglibdir = /usr/local/lib/tetris
-tetris_CPPFLAGS += -DDIR=\"$(pkgdatadir)/\"
+#pkgdatadir = /usr/local/share/tetron
+#pkglibdir = /usr/local/lib/tetron
+tetron_CPPFLAGS += -DDIR=\"$(pkgdatadir)/\"
 
-# We want this file to be put in /usr/local/share/tetris/block.bmp
+# We want this file to be put in /usr/local/share/tetron/block.bmp
 dist_pkgdata_DATA = menu.bmp
 dist_pkgdata_DATA += block.bmp
 

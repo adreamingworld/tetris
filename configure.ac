@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([tetris], [0.0.1], [])
-AC_CONFIG_SRCDIR([src/tetris.c])
+AC_INIT([tetron], [0.0.1], [])
+AC_CONFIG_SRCDIR([src/tetron.c])
 AC_CONFIG_HEADERS([config.h])
 
 

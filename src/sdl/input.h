@@ -2,7 +2,6 @@
 #define INPUT_H
 
 #include <SDL.h>
-#include "../tetris.h"
 
 #define KEY_UP		SDLK_UP
 #define KEY_DOWN	SDLK_DOWN

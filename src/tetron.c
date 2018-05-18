@@ -1,5 +1,5 @@
 /**
-	@file tetris.c
+	@file tetron.c
 	@todo 	Make a drop function. Make a ghost shape that shows where
 			the shape will land.
 	@todo	make it so the shape is drawn with the board
@@ -11,7 +11,7 @@
 
 #include <time.h>
 
-#include "tetris.h"
+#include "tetron.h"
 #include "sdl/gfx.h"
 #include "sdl/input.h"
 #include "sdl/sys.h"

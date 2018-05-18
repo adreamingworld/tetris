@@ -3,7 +3,7 @@
 
 #include <SDL.h>
 #include <math.h>
-#include "../tetris.h"
+#include "../tetron.h"
 
 typedef struct {
 	int w,h;
