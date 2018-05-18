@@ -1,4 +1,4 @@
-# Tetris
+# Tetron
 
 My attempt at making tetris in C.
 
