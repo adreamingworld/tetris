@@ -4,8 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([tetron], [0.0.1], [])
 AC_CONFIG_SRCDIR([src/tetron.c])
-AC_CONFIG_HEADERS([config.h])
-
+AC_CONFIG_HEADERS([src/config.h])
 
 AC_CONFIG_AUX_DIR([build-aux]) 
 

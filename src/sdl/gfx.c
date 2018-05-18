@@ -74,8 +74,11 @@ int init_gfx(Gfx *gfx, const char *title, int w, int h)
 
 	gfx->menu_stuff = SDL_LoadBMP(DIR"menu.bmp");
 	if (gfx->menu_stuff == 0) {
-		printf("Failed to load "DIR"menu.bmp\n");
 		gfx->menu_stuff = SDL_LoadBMP("menu.bmp");
+		if (gfx->menu_stuff == 0) {
+			printf("Failed to load menu.bmp.\n");
+			exit(-1);
+		}
 	}
 	scale(&gfx->menu_stuff, SCALE);
 

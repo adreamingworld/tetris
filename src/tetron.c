@@ -11,6 +11,9 @@
 
 #include <time.h>
 
+/* From configure.ac */
+#include "config.h"
+
 #include "tetron.h"
 #include "sdl/gfx.h"
 #include "sdl/input.h"
@@ -126,7 +129,7 @@ void draw_shape(Gfx *gfx, Shape *s, Board *b)
 		int x ;
 		int y ;
 		if (get_block_from_shape(s, i, &x, &y)) {
-			if (y < 0) continue; //printf("DANGER\n");
+			if (y < 0) continue; 
 			draw_block(gfx, s->type, (x)*32,y*32);
 		}
 	}
@@ -294,7 +297,6 @@ void draw_particle(Gfx *gfx, Game *game, Particle *p, int move) {
 }
 
 int play(Game *game) {
-	printf("Starting game\n");
 
 	while (game->state == 1) {
 		get_input(game->keys);
@@ -334,7 +336,6 @@ int play(Game *game) {
 
 int menu(Game *game) {
 	int selected = 0;
-	printf("Start menu\n");
 
 
 	while (!game->quit) {
@@ -358,7 +359,6 @@ int menu(Game *game) {
 		if (selected > 2) selected = 0;
 
 		if (game->keys[KEY_RETURN]) {
-			printf("PRESSED\n");
 			switch (selected) {
 				case 0:
 					init_shape(&game->shape, 4,0);
@@ -399,10 +399,12 @@ int main(int argc, char *argv[])
 
 	srand((unsigned) time(NULL));
 
+	printf(PACKAGE_NAME"-"VERSION"\n");
+
 	init_shape(&game.shape, 4,0);
 	init_board(&game.board, 0,0, 12, 22);
 	int sidebar_size = 16*2*4;
-	init_gfx(&game.gfx, "Tetris", game.board.w*32 + sidebar_size, game.board.h*32);
+	init_gfx(&game.gfx, "Tetron", game.board.w*32 + sidebar_size, game.board.h*32);
 	game.w = game.gfx.w;
 	game.h = game.gfx.h;
 
