@@ -33,9 +33,12 @@ typedef struct {
 	Gfx gfx;
 	unsigned short keys[0x10000];
 	int quit;
+	int state; /*0 = menu; 1 = game*/
 	Board board;
 	Shape shape;
 	int w,h;
+	unsigned int ticks;
+	unsigned int start_ticks;
 } Game;
 
 unsigned short keys[0x10000];
@@ -63,10 +66,11 @@ void init_board(Board *board, int x, int y, int w, int h)
 
 	board->particles = calloc( sizeof(Particle)* w*(h+1), 1);
 	
-	for (i=0; i<(h)*w; i++) {
-		int x = i%w;
-		int y = i/w;
-		init_particle(&board->particles[i], x, y, rand()%7);
+	for (i=0; i<(h)*(w-2); i++) {
+		int x = 1+ i%(w-2);
+		int y = i/(w-2);
+		//init_particle(&board->particles[i], x, y, rand()%7);
+		init_particle(&board->particles[i], x, y, 2);
 	}
 
 	for (i = 0; i < h+1; i++) {
@@ -86,7 +90,7 @@ void init_shape(Shape *shape, int x, int y)
 {
 	shape->x = x;
 	shape->y = y;
-	shape->type = rand()%7;
+	shape->type = 1 + rand()%6;
 	shape->new_rotation = rand()%4;
 }
 
@@ -154,7 +158,10 @@ int check_collision(Board *b, char type, char rotation, int x, int y)
 }
 void process_input(Game *game, unsigned short keys[])
 {
-	if (keys[KEY_ESCAPE]) game->quit = 1;
+	if (keys[KEY_ESCAPE]) {
+		keys[KEY_ESCAPE] &= 1;
+		game->state = 0; /* Back to the menu */
+	}
 
 	if (keys[KEY_UP]) {
 		if (keys[KEY_UP] & 0x80) {
@@ -271,8 +278,9 @@ void draw_board(Gfx *gfx, Board *b)
 		if (b->data[y][x]) draw_block(gfx, b->data[y][x]-1, (x)*32, y*32);
 	}
 }
-void draw_particle(Gfx *gfx, Game *game, Particle *p) {
+void draw_particle(Gfx *gfx, Game *game, Particle *p, int move) {
 	draw_block(gfx, p->type, p->x, p->y);
+	if (!move) return;
 	p->x += p->vx;
 	p->y += p->vy;
 	p->vy += 0.05;
@@ -285,6 +293,105 @@ void draw_particle(Gfx *gfx, Game *game, Particle *p) {
 		) p->active = 0;
 }
 
+int play(Game *game) {
+	printf("Starting game\n");
+
+	while (game->state == 1) {
+		get_input(game->keys);
+		process_input(game, game->keys); 
+
+		/* Calculate positions */
+		/* Draw board */
+		draw_board(&game->gfx, &game->board);
+
+		/* Draw shape */
+		draw_shape(&game->gfx, &game->shape, &game->board);
+
+		/* Draw Particles */
+		int j;
+		for (j=0; j< game->board.w * game->board.h;j++) {
+			if (game->board.particles[j].active)
+				draw_particle(&game->gfx, game, &game->board.particles[j], 1);
+		}
+
+		/* Update display */
+		gfx_flip(&game->gfx);
+		gfx_clear(&game->gfx);
+
+		unsigned int current_time = sys_get_ticks();
+		if (current_time > game->start_ticks + 1000) {
+			game->start_ticks = sys_get_ticks();
+			if (check_collision(&game->board, game->shape.type, game->shape.rotation, game->shape.x, game->shape.y+1) ) {
+				game->shape.y += 1;
+			} else {
+				set_shape(&game->shape, &game->board);
+				/* New shape */
+				init_shape(&game->shape, 4,0);
+			}
+		}
+	}
+}
+
+int menu(Game *game) {
+	int selected = 0;
+	printf("Start menu\n");
+
+
+	while (!game->quit) {
+		get_input(game->keys);
+
+		if (game->keys[KEY_DOWN]) {
+			if (game->keys[KEY_DOWN] & 0x80) {
+				game->keys[KEY_DOWN] &= 0x01;
+				selected++;
+			}
+		}
+		if (game->keys[KEY_UP]) {
+			if (game->keys[KEY_UP] & 0x80) {
+				game->keys[KEY_UP] &= 0x01;
+				selected--;
+			}
+		}
+
+		/* Sort selected bounds */
+		if (selected < 0) selected = 2;
+		if (selected > 2) selected = 0;
+
+		if (game->keys[KEY_RETURN]) {
+			printf("PRESSED\n");
+			switch (selected) {
+				case 0:
+					init_board(&game->board, 0,0, 12, 22);
+					game->state = 1;
+					play(game);
+				break;
+				case 1:
+					game->state = 1;
+					play(game);
+				break;
+				case 2:
+					game->quit = 1;
+				break;
+			}
+		}
+
+		draw_board(&game->gfx, &game->board);
+		draw_shape(&game->gfx, &game->shape, &game->board);
+		/*Draw Particles */
+		/** @todo this should be part of draw board function */
+		int j;
+		for (j=0; j< game->board.w * game->board.h;j++) {
+			if (game->board.particles[j].active)
+				draw_particle(&game->gfx, game, &game->board.particles[j], 0);
+		}
+		/* Draw menu */
+		draw_menu(&game->gfx, selected, sys_get_ticks());
+		gfx_flip(&game->gfx);
+		gfx_clear(&game->gfx);
+	}
+}
+
+
 int main(int argc, char *argv[])
 {
 	Game game = {0};
@@ -293,43 +400,12 @@ int main(int argc, char *argv[])
 
 	init_shape(&game.shape, 4,0);
 	init_board(&game.board, 0,0, 12, 22);
-	init_gfx(&game.gfx, "Tetris", game.board.w*32, game.board.h*32);
+	int sidebar_size = 16*2*4;
+	init_gfx(&game.gfx, "Tetris", game.board.w*32 + sidebar_size, game.board.h*32);
 	game.w = game.gfx.w;
 	game.h = game.gfx.h;
-	unsigned int start = sys_get_ticks();
 
-	while (!game.quit) {
-		get_input(game.keys);
-		process_input(&game, game.keys); 
-
-		/* Calculate positions */
-		/* Draw board */
-		draw_board(&game.gfx, &game.board);
-
-		/* Draw shape */
-		draw_shape(&game.gfx, &game.shape, &game.board);
-
-		/* Draw Particles */
-		int j;
-		for (j=0; j< game.board.w * game.board.h;j++) {
-			if (game.board.particles[j].active)
-				draw_particle(&game.gfx, &game, &game.board.particles[j]);
-		}
-
-		/* Update display */
-		gfx_flip(&game.gfx);
-		gfx_clear(&game.gfx);
-
-		unsigned int current_time = sys_get_ticks();
-		if (current_time > start + 300) {
-			start = sys_get_ticks();
-			if (check_collision(&game.board, game.shape.type, game.shape.rotation, game.shape.x, game.shape.y+1) ) {
-				game.shape.y += 1;
-			} else {
-				set_shape(&game.shape, &game.board);
-				/* New shape */
-				init_shape(&game.shape, 4,0);
-			}
-		}
-	}
+	game.start_ticks = sys_get_ticks();
+	/* main loop */
+	menu(&game);
 }

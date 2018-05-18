@@ -9,6 +9,7 @@
 #define KEY_LEFT	SDLK_LEFT
 #define KEY_RIGHT	SDLK_RIGHT
 
+#define KEY_RETURN	SDLK_RETURN
 #define KEY_ESCAPE	SDLK_ESCAPE
 
 int get_input(unsigned short keys[]);

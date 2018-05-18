@@ -24,6 +24,7 @@ tetris_LDADD = @SDL_LIBS@
 tetris_CPPFLAGS += -DDIR=\"$(pkgdatadir)/\"
 
 # We want this file to be put in /usr/local/share/tetris/block.bmp
-dist_pkgdata_DATA = block.bmp
+dist_pkgdata_DATA = menu.bmp
+dist_pkgdata_DATA += block.bmp
 
 

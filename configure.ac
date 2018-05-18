@@ -6,6 +6,7 @@ AC_INIT([tetris], [0.0.1], [])
 AC_CONFIG_SRCDIR([src/tetris.c])
 AC_CONFIG_HEADERS([config.h])
 
+
 AC_CONFIG_AUX_DIR([build-aux]) 
 
 #need this to get $host_os
@@ -16,6 +17,8 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 
 # Checks for libraries.
+# -lm for maths
+AC_SEARCH_LIBS([sin], [m], [], [AC_MSG_ERROR([Unable to find sin() function])])
 PKG_CHECK_MODULES([SDL], sdl, [], AC_MSG_ERROR([Failed to find SDL]))
 
 # Checks for header files.
