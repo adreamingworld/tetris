@@ -361,6 +361,7 @@ int menu(Game *game) {
 			printf("PRESSED\n");
 			switch (selected) {
 				case 0:
+					init_shape(&game->shape, 4,0);
 					init_board(&game->board, 0,0, 12, 22);
 					game->state = 1;
 					play(game);
